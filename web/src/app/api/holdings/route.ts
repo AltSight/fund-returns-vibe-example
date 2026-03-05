@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getSupabase } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   const params = request.nextUrl.searchParams;
   const assetClass = params.get("asset_class");
   const pensionFund = params.get("pension_fund");
@@ -27,54 +28,45 @@ export async function GET(request: NextRequest) {
     "asset_class",
   ];
   const safeSortBy = allowedSorts.includes(sortBy) ? sortBy : "fund_name";
-  const safeSortDir = sortDir === "desc" ? "DESC" : "ASC";
+  const ascending = sortDir !== "desc";
 
-  const conditions: string[] = [];
-  const values: (string | number)[] = [];
-
-  if (assetClass && assetClass !== "All") {
-    conditions.push("asset_class = ?");
-    values.push(assetClass);
-  }
-  if (pensionFund && pensionFund !== "All") {
-    conditions.push("pension_fund = ?");
-    values.push(pensionFund);
-  }
-  if (search) {
-    conditions.push("fund_name LIKE ?");
-    values.push(`%${search}%`);
-  }
-  if (minIrr) {
-    conditions.push("irr >= ?");
-    values.push(parseFloat(minIrr));
-  }
-  if (maxIrr) {
-    conditions.push("irr <= ?");
-    values.push(parseFloat(maxIrr));
-  }
-
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const offset = (page - 1) * limit;
 
   try {
-    const db = getDb();
+    let query = supabase.from("fund_holdings").select("*", { count: "exact" });
 
-    const countRow = db
-      .prepare(`SELECT COUNT(*) as total FROM fund_holdings ${where}`)
-      .get(...values) as { total: number };
+    if (assetClass && assetClass !== "All") {
+      query = query.eq("asset_class", assetClass);
+    }
+    if (pensionFund && pensionFund !== "All") {
+      query = query.eq("pension_fund", pensionFund);
+    }
+    if (search) {
+      query = query.ilike("fund_name", `%${search}%`);
+    }
+    if (minIrr) {
+      query = query.gte("irr", parseFloat(minIrr));
+    }
+    if (maxIrr) {
+      query = query.lte("irr", parseFloat(maxIrr));
+    }
 
-    const rows = db
-      .prepare(
-        `SELECT * FROM fund_holdings ${where} ORDER BY ${safeSortBy} ${safeSortDir} LIMIT ? OFFSET ?`
-      )
-      .all(...values, limit, offset);
+    query = query
+      .order(safeSortBy, { ascending })
+      .range(offset, offset + limit - 1);
+
+    const { data, count, error } = await query;
+
+    if (error) throw error;
+
+    const total = count ?? 0;
 
     return NextResponse.json({
-      data: rows,
-      total: countRow.total,
+      data: data ?? [],
+      total,
       page,
       limit,
-      totalPages: Math.ceil(countRow.total / limit),
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     console.error("Database error:", error);

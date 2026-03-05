@@ -1,58 +1,36 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getSupabase } from "@/lib/db";
 
 export async function GET() {
+  const supabase = getSupabase();
   try {
-    const db = getDb();
+    const [assetClassRes, pensionFundRes, totalsRes, documentsRes] =
+      await Promise.all([
+        supabase.rpc("get_asset_class_stats"),
+        supabase.rpc("get_pension_fund_stats"),
+        supabase.rpc("get_totals"),
+        supabase
+          .from("documents")
+          .select("*")
+          .order("processed_at", { ascending: false }),
+      ]);
 
-    const assetClasses = db
-      .prepare(
-        `SELECT asset_class, COUNT(*) as count, AVG(irr) as avg_irr,
-                AVG(tvpi) as avg_tvpi, SUM(commitment) as total_commitment
-         FROM fund_holdings WHERE asset_class IS NOT NULL
-         GROUP BY asset_class ORDER BY count DESC`
-      )
-      .all() as {
-      asset_class: string;
-      count: number;
-      avg_irr: number | null;
-      avg_tvpi: number | null;
-      total_commitment: number | null;
-    }[];
-
-    const pensionFunds = db
-      .prepare(
-        `SELECT pension_fund, COUNT(*) as count, as_of_date
-         FROM fund_holdings GROUP BY pension_fund ORDER BY count DESC`
-      )
-      .all() as { pension_fund: string; count: number; as_of_date: string }[];
-
-    const documents = db
-      .prepare(`SELECT * FROM documents ORDER BY processed_at DESC`)
-      .all();
-
-    const totals = db
-      .prepare(
-        `SELECT COUNT(*) as total_holdings,
-                COUNT(DISTINCT pension_fund) as total_pensions,
-                COUNT(DISTINCT asset_class) as total_asset_classes,
-                AVG(irr) as avg_irr,
-                AVG(tvpi) as avg_tvpi
-         FROM fund_holdings`
-      )
-      .get() as {
-      total_holdings: number;
-      total_pensions: number;
-      total_asset_classes: number;
-      avg_irr: number | null;
-      avg_tvpi: number | null;
-    };
+    if (assetClassRes.error) throw assetClassRes.error;
+    if (pensionFundRes.error) throw pensionFundRes.error;
+    if (totalsRes.error) throw totalsRes.error;
+    if (documentsRes.error) throw documentsRes.error;
 
     return NextResponse.json({
-      assetClasses,
-      pensionFunds,
-      documents,
-      totals,
+      assetClasses: assetClassRes.data,
+      pensionFunds: pensionFundRes.data,
+      documents: documentsRes.data,
+      totals: totalsRes.data?.[0] ?? {
+        total_holdings: 0,
+        total_pensions: 0,
+        total_asset_classes: 0,
+        avg_irr: null,
+        avg_tvpi: null,
+      },
     });
   } catch (error) {
     console.error("Database error:", error);

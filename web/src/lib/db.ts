@@ -1,16 +1,17 @@
-import Database from "better-sqlite3";
-import path from "path";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const DB_PATH = path.join(process.cwd(), "..", "data", "funds.db");
+let _client: SupabaseClient | null = null;
 
-let db: Database.Database | null = null;
-
-export function getDb(): Database.Database {
-  if (!db) {
-    db = new Database(DB_PATH, { readonly: true });
-    db.pragma("journal_mode = WAL");
+export function getSupabase(): SupabaseClient {
+  if (!_client) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) {
+      throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    }
+    _client = createClient(url, key);
   }
-  return db;
+  return _client;
 }
 
 export interface FundHolding {
