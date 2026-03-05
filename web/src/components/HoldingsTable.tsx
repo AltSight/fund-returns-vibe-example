@@ -40,6 +40,9 @@ function irrColor(irr: number | null): string {
 
 const COLUMNS = [
   { key: "fund_name", label: "Fund Name", sortable: true },
+  { key: "irr", label: "IRR", sortable: true },
+  { key: "tvpi", label: "TVPI", sortable: true },
+  { key: "dpi", label: "DPI", sortable: true },
   { key: "pension_fund", label: "Pension", sortable: true },
   { key: "asset_class", label: "Asset Class", sortable: true },
   { key: "vintage_year", label: "Vintage", sortable: true },
@@ -47,9 +50,6 @@ const COLUMNS = [
   { key: "contributed", label: "Contributed", sortable: true },
   { key: "distributed", label: "Distributed", sortable: true },
   { key: "market_value", label: "Market Value", sortable: true },
-  { key: "irr", label: "IRR", sortable: true },
-  { key: "tvpi", label: "TVPI", sortable: true },
-  { key: "dpi", label: "DPI", sortable: true },
 ];
 
 export default function HoldingsTable({
@@ -91,6 +91,19 @@ export default function HoldingsTable({
               <td className="px-4 py-3 font-medium text-gray-900 max-w-xs truncate">
                 {h.fund_name}
               </td>
+              <td className="px-4 py-3 text-right font-mono">
+                <span
+                  className={`inline-block px-2 py-0.5 rounded ${irrColor(h.irr)}`}
+                >
+                  {formatPercent(h.irr)}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-gray-700 text-right font-mono">
+                {formatMultiple(h.tvpi)}
+              </td>
+              <td className="px-4 py-3 text-gray-700 text-right font-mono">
+                {formatMultiple(h.dpi)}
+              </td>
               <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                 {h.pension_fund === "Washington State Investment Board"
                   ? "WSIB"
@@ -115,19 +128,6 @@ export default function HoldingsTable({
               </td>
               <td className="px-4 py-3 text-gray-700 text-right font-mono">
                 {formatCurrency(h.market_value)}
-              </td>
-              <td className="px-4 py-3 text-right font-mono">
-                <span
-                  className={`inline-block px-2 py-0.5 rounded ${irrColor(h.irr)}`}
-                >
-                  {formatPercent(h.irr)}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-gray-700 text-right font-mono">
-                {formatMultiple(h.tvpi)}
-              </td>
-              <td className="px-4 py-3 text-gray-700 text-right font-mono">
-                {formatMultiple(h.dpi)}
               </td>
             </tr>
           ))}
