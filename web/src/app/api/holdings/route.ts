@@ -7,8 +7,8 @@ export async function GET(request: NextRequest) {
   const assetClass = params.get("asset_class");
   const pensionFund = params.get("pension_fund");
   const search = params.get("search");
-  const sortBy = params.get("sort_by") || "fund_name";
-  const sortDir = params.get("sort_dir") || "asc";
+  const sortBy = params.get("sort_by") || "irr";
+  const sortDir = params.get("sort_dir") || "desc";
   const page = parseInt(params.get("page") || "1");
   const limit = parseInt(params.get("limit") || "50");
   const minIrr = params.get("min_irr");
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     "pension_fund",
     "asset_class",
   ];
-  const safeSortBy = allowedSorts.includes(sortBy) ? sortBy : "fund_name";
+  const safeSortBy = allowedSorts.includes(sortBy) ? sortBy : "irr";
   const ascending = sortDir !== "desc";
 
   const offset = (page - 1) * limit;
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     }
 
     query = query
-      .order(safeSortBy, { ascending })
+      .order(safeSortBy, { ascending, nullsFirst: false })
       .range(offset, offset + limit - 1);
 
     const { data, count, error } = await query;
