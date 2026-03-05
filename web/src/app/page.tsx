@@ -109,7 +109,8 @@ export default function Home() {
                 Alternative Assets Returns
               </h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                Pension fund PE, VC, and alternative investment performance
+                Pension fund PE, VC, and alternative investment performance from
+                public pension disclosures.
               </p>
             </div>
             {stats && (

@@ -13,8 +13,48 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Alternative Assets Returns",
-  description: "Pension fund PE, VC, and alternative investment performance tracker",
+  metadataBase: new URL("https://fund-returns.altsight.ai"),
+  title: {
+    default: "Alternative Assets Returns | AltSight",
+    template: "%s | AltSight",
+  },
+  description:
+    "Track pension fund private equity, venture capital, and alternative investment performance. IRR, TVPI, and DPI data from public pension disclosures.",
+  keywords: [
+    "alternative assets",
+    "pension fund returns",
+    "private equity performance",
+    "venture capital IRR",
+    "TVPI",
+    "DPI",
+    "CalPERS",
+    "pension fund holdings",
+  ],
+  openGraph: {
+    title: "Alternative Assets Returns | AltSight",
+    description:
+      "Track pension fund PE, VC, and alternative investment performance with IRR, TVPI, and DPI data.",
+    url: "https://fund-returns.altsight.ai",
+    siteName: "AltSight",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Alternative Assets Returns | AltSight",
+    description:
+      "Track pension fund PE, VC, and alternative investment performance.",
+  },
+  alternates: {
+    canonical: "https://fund-returns.altsight.ai",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
 };
 
 export default function RootLayout({
