@@ -150,6 +150,10 @@ export default function Home() {
               <McpInfoButton />
             </div>
           </div>
+          <p className="mt-1 text-xs text-slate-500">
+            PE, VC &amp; alternative investment performance from public pension
+            disclosures
+          </p>
         </div>
       </header>
 
