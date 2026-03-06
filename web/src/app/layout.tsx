@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import PostHogPageView from "@/components/PostHogPageView";
 
@@ -70,7 +71,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PostHogPageView apiKey={posthogApiKey} />
+        <Suspense fallback={null}>
+          <PostHogPageView apiKey={posthogApiKey} />
+        </Suspense>
         {children}
       </body>
     </html>

@@ -58,7 +58,7 @@ export default function HoldingsTable({
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200/80 bg-white shadow-sm">
       <table className="min-w-full text-sm">
-        <thead>
+        <thead className="border-b-2 border-gray-300">
           <tr style={{ background: "var(--header-bg)" }}>
             {COLUMNS.map((col) => (
               <th
@@ -66,7 +66,7 @@ export default function HoldingsTable({
                 onClick={() => col.sortable && onSort(col.key)}
                 className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap
                   ${col.sortable ? "cursor-pointer select-none" : ""}`}
-                style={{ color: "rgba(255,255,255,0.6)" }}
+                style={{ color: "#1F2937" }}
               >
                 <span className="flex items-center gap-1">
                   {col.label}
