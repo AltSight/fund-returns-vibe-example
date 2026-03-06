@@ -1,7 +1,19 @@
 @import "tailwindcss";
 
+:root {
+  --primary: 179 47% 33%;
+  --primary-foreground: 0 0% 100%;
+  --accent: #2c7a78;
+  --accent-light: #e8f4f3;
+  --accent-dark: #225e5c;
+  --accent-mid: #5da09e;
+  --header-bg: #FFFFFF;
+  --header-text: #1C2434;
+}
+
 body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  background: #F7F8FA;
 }
 
 .font-mono {

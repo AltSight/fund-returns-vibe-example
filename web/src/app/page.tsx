@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import { Database } from "lucide-react";
 import StatsCards from "@/components/StatsCards";
 import Filters from "@/components/Filters";
 import HoldingsTable from "@/components/HoldingsTable";
 import Pagination from "@/components/Pagination";
 import AssetClassBreakdown from "@/components/AssetClassBreakdown";
+import McpInfoButton from "@/components/McpInfoButton";
+import Benchmarking from "@/components/Benchmarking";
 import { FundHolding } from "@/lib/db";
 
 interface Stats {
@@ -100,28 +104,51 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-[1600px] mx-auto px-6 py-4">
+    <div className="min-h-screen" style={{ background: "#F7F8FA" }}>
+      <header
+        className="sticky top-0 z-10 border-b border-gray-200"
+        style={{ background: "var(--header-bg)" }}
+      >
+        <div className="max-w-[1600px] mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                Alternative Assets Returns
-              </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Pension fund PE, VC, and alternative investment performance from
-                public pension disclosures.
-              </p>
+            <div className="flex items-center gap-2">
+              <Link
+                href="https://altsight.ai"
+                className="flex items-center gap-2"
+              >
+                <div
+                  className="rounded-md p-1"
+                  style={{ backgroundColor: "hsl(var(--primary))" }}
+                >
+                  <Database
+                    className="h-5 w-5"
+                    style={{ color: "hsl(var(--primary-foreground))" }}
+                  />
+                </div>
+                <span className="text-xl font-bold">AltSight Analytics</span>
+              </Link>
             </div>
-            {stats && (
-              <div className="hidden md:flex items-center gap-4 text-xs text-gray-400">
-                {stats.documents.map((doc) => (
-                  <span key={doc.id}>
-                    {doc.pension_fund} ({doc.report_date})
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {stats && (
+                <div className="hidden lg:flex items-center gap-3 text-[11px] text-slate-400">
+                  {stats.documents.map((doc) => (
+                    <span
+                      key={doc.id}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50"
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full inline-block"
+                        style={{ background: "var(--accent)" }}
+                      />
+                      {doc.pension_fund}
+                      <span className="text-slate-300">|</span>
+                      {doc.report_date}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <McpInfoButton />
+            </div>
           </div>
         </div>
       </header>
@@ -130,13 +157,14 @@ export default function Home() {
         {stats && <StatsCards totals={stats.totals} />}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             {stats && (
               <AssetClassBreakdown
                 data={stats.assetClasses}
                 onSelect={handleAssetClassSelect}
               />
             )}
+            <Benchmarking />
           </div>
           <div className="lg:col-span-2 space-y-4">
             {stats && (

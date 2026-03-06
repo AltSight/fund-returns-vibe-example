@@ -21,25 +21,12 @@ function formatCurrency(n: number | null): string {
   return `$${n.toLocaleString()}`;
 }
 
-const BAR_COLORS: Record<string, string> = {
-  "Private Equity": "bg-blue-500",
-  "Venture Capital": "bg-purple-500",
-  "Growth Equity": "bg-emerald-500",
-  "Private Credit": "bg-amber-500",
-  "Real Estate": "bg-rose-500",
-  "Co-Investment": "bg-cyan-500",
-  "Natural Resources": "bg-orange-500",
-  "Infrastructure": "bg-teal-500",
-  "Fund of Funds": "bg-indigo-500",
-  Secondary: "bg-pink-500",
-};
-
 export default function AssetClassBreakdown({ data, onSelect }: Props) {
   const maxCount = Math.max(...data.map((d) => d.count));
 
   return (
-    <div className="border border-gray-200 rounded-xl p-5">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">
+    <div className="bg-white border border-gray-200/80 rounded-xl p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-gray-800 mb-4">
         Holdings by Asset Class
       </h3>
       <div className="space-y-3">
@@ -50,18 +37,23 @@ export default function AssetClassBreakdown({ data, onSelect }: Props) {
             className="w-full text-left group"
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+              <span className="text-sm font-medium text-gray-700 group-hover:text-[var(--accent-dark)] transition-colors">
                 {row.asset_class}
               </span>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-4 text-xs text-gray-400">
                 <span>{row.count} funds</span>
                 <span>
-                  Avg IRR:{" "}
+                  IRR:{" "}
                   <span
                     className={
                       row.avg_irr && row.avg_irr >= 10
-                        ? "text-emerald-600 font-medium"
-                        : "text-gray-600"
+                        ? "font-medium"
+                        : "text-gray-500"
+                    }
+                    style={
+                      row.avg_irr && row.avg_irr >= 10
+                        ? { color: "var(--accent-dark)" }
+                        : undefined
                     }
                   >
                     {row.avg_irr ? `${row.avg_irr.toFixed(1)}%` : "—"}
@@ -72,8 +64,11 @@ export default function AssetClassBreakdown({ data, onSelect }: Props) {
             </div>
             <div className="w-full bg-gray-100 rounded-full h-2">
               <div
-                className={`h-2 rounded-full transition-all ${BAR_COLORS[row.asset_class] || "bg-gray-400"}`}
-                style={{ width: `${(row.count / maxCount) * 100}%` }}
+                className="h-2 rounded-full transition-all"
+                style={{
+                  width: `${(row.count / maxCount) * 100}%`,
+                  background: "var(--accent)",
+                }}
               />
             </div>
           </button>

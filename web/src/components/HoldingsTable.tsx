@@ -11,12 +11,9 @@ interface HoldingsTableProps {
 
 function formatCurrency(n: number | null): string {
   if (n === null || n === undefined) return "—";
-  if (Math.abs(n) >= 1e9)
-    return `$${(n / 1e9).toFixed(2)}B`;
-  if (Math.abs(n) >= 1e6)
-    return `$${(n / 1e6).toFixed(1)}M`;
-  if (Math.abs(n) >= 1e3)
-    return `$${(n / 1e3).toFixed(0)}K`;
+  if (Math.abs(n) >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+  if (Math.abs(n) >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+  if (Math.abs(n) >= 1e3) return `$${(n / 1e3).toFixed(0)}K`;
   return `$${n.toFixed(0)}`;
 }
 
@@ -30,12 +27,12 @@ function formatMultiple(n: number | null): string {
   return `${n.toFixed(2)}x`;
 }
 
-function irrColor(irr: number | null): string {
-  if (irr === null) return "";
-  if (irr >= 20) return "text-emerald-700 bg-emerald-50";
-  if (irr >= 10) return "text-green-700 bg-green-50";
-  if (irr >= 0) return "text-gray-700";
-  return "text-red-600 bg-red-50";
+function irrBadge(irr: number | null): { bg: string; text: string } {
+  if (irr === null) return { bg: "transparent", text: "#9CA3AF" };
+  if (irr >= 20) return { bg: "var(--accent-light)", text: "var(--accent-dark)" };
+  if (irr >= 10) return { bg: "#ECFDF5", text: "#065F46" };
+  if (irr >= 0) return { bg: "transparent", text: "#374151" };
+  return { bg: "#FEF2F2", text: "#DC2626" };
 }
 
 const COLUMNS = [
@@ -59,21 +56,22 @@ export default function HoldingsTable({
   onSort,
 }: HoldingsTableProps) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200">
+    <div className="overflow-x-auto rounded-xl border border-gray-200/80 bg-white shadow-sm">
       <table className="min-w-full text-sm">
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
+          <tr style={{ background: "var(--header-bg)" }}>
             {COLUMNS.map((col) => (
               <th
                 key={col.key}
                 onClick={() => col.sortable && onSort(col.key)}
-                className={`px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap
-                  ${col.sortable ? "cursor-pointer hover:text-gray-900 select-none" : ""}`}
+                className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap
+                  ${col.sortable ? "cursor-pointer select-none" : ""}`}
+                style={{ color: "rgba(255,255,255,0.6)" }}
               >
                 <span className="flex items-center gap-1">
                   {col.label}
                   {sortBy === col.key && (
-                    <span className="text-blue-500">
+                    <span style={{ color: "var(--accent)" }}>
                       {sortDir === "asc" ? "↑" : "↓"}
                     </span>
                   )}
@@ -83,54 +81,68 @@ export default function HoldingsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {holdings.map((h) => (
-            <tr
-              key={h.id}
-              className="hover:bg-blue-50/40 transition-colors"
-            >
-              <td className="px-4 py-3 font-medium text-gray-900 max-w-xs truncate">
-                {h.fund_name}
-              </td>
-              <td className="px-4 py-3 text-right font-mono">
-                <span
-                  className={`inline-block px-2 py-0.5 rounded ${irrColor(h.irr)}`}
-                >
-                  {formatPercent(h.irr)}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-gray-700 text-right font-mono">
-                {formatMultiple(h.tvpi)}
-              </td>
-              <td className="px-4 py-3 text-gray-700 text-right font-mono">
-                {formatMultiple(h.dpi)}
-              </td>
-              <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                {h.pension_fund === "Washington State Investment Board"
-                  ? "WSIB"
-                  : h.pension_fund}
-              </td>
-              <td className="px-4 py-3">
-                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                  {h.asset_class || "—"}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-gray-600 text-center">
-                {h.vintage_year || "—"}
-              </td>
-              <td className="px-4 py-3 text-gray-700 text-right font-mono">
-                {formatCurrency(h.commitment)}
-              </td>
-              <td className="px-4 py-3 text-gray-700 text-right font-mono">
-                {formatCurrency(h.contributed)}
-              </td>
-              <td className="px-4 py-3 text-gray-700 text-right font-mono">
-                {formatCurrency(h.distributed)}
-              </td>
-              <td className="px-4 py-3 text-gray-700 text-right font-mono">
-                {formatCurrency(h.market_value)}
-              </td>
-            </tr>
-          ))}
+          {holdings.map((h) => {
+            const irr = irrBadge(h.irr);
+            return (
+              <tr
+                key={h.id}
+                className="transition-colors"
+                style={{ cursor: "default" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "var(--accent-light)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
+              >
+                <td className="px-4 py-3 font-medium text-gray-900 max-w-xs truncate">
+                  {h.fund_name}
+                </td>
+                <td className="px-4 py-3 text-right font-mono">
+                  <span
+                    className="inline-block px-2 py-0.5 rounded text-sm font-semibold"
+                    style={{ background: irr.bg, color: irr.text }}
+                  >
+                    {formatPercent(h.irr)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-gray-600 text-right font-mono">
+                  {formatMultiple(h.tvpi)}
+                </td>
+                <td className="px-4 py-3 text-gray-600 text-right font-mono">
+                  {formatMultiple(h.dpi)}
+                </td>
+                <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
+                  {h.pension_fund === "Washington State Investment Board"
+                    ? "WSIB"
+                    : h.pension_fund}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{ background: "var(--accent-light)", color: "var(--accent-dark)" }}
+                  >
+                    {h.asset_class || "—"}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-gray-500 text-center">
+                  {h.vintage_year || "—"}
+                </td>
+                <td className="px-4 py-3 text-gray-600 text-right font-mono">
+                  {formatCurrency(h.commitment)}
+                </td>
+                <td className="px-4 py-3 text-gray-600 text-right font-mono">
+                  {formatCurrency(h.contributed)}
+                </td>
+                <td className="px-4 py-3 text-gray-600 text-right font-mono">
+                  {formatCurrency(h.distributed)}
+                </td>
+                <td className="px-4 py-3 text-gray-600 text-right font-mono">
+                  {formatCurrency(h.market_value)}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {holdings.length === 0 && (

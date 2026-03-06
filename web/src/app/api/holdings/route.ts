@@ -35,6 +35,11 @@ export async function GET(request: NextRequest) {
   try {
     let query = supabase.from("fund_holdings").select("*", { count: "exact" });
 
+    // Exclude NY State Common public equity holdings (classified as "Other")
+    query = query.or(
+      "pension_fund.neq.NY State Common Retirement Fund,asset_class.neq.Other"
+    );
+
     if (assetClass && assetClass !== "All") {
       query = query.eq("asset_class", assetClass);
     }

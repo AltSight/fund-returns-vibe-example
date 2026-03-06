@@ -17,31 +17,11 @@ function formatNumber(n: number | null, decimals = 2): string {
 
 export default function StatsCards({ totals }: StatsCardsProps) {
   const cards = [
-    {
-      label: "Total Holdings",
-      value: totals.total_holdings.toLocaleString(),
-      color: "bg-blue-50 border-blue-200",
-    },
-    {
-      label: "Pension Funds",
-      value: totals.total_pensions.toString(),
-      color: "bg-emerald-50 border-emerald-200",
-    },
-    {
-      label: "Asset Classes",
-      value: totals.total_asset_classes.toString(),
-      color: "bg-purple-50 border-purple-200",
-    },
-    {
-      label: "Avg IRR",
-      value: `${formatNumber(totals.avg_irr)}%`,
-      color: "bg-amber-50 border-amber-200",
-    },
-    {
-      label: "Avg TVPI",
-      value: `${formatNumber(totals.avg_tvpi)}x`,
-      color: "bg-rose-50 border-rose-200",
-    },
+    { label: "Total Holdings", value: totals.total_holdings.toLocaleString() },
+    { label: "Pension Funds", value: totals.total_pensions.toString() },
+    { label: "Asset Classes", value: totals.total_asset_classes.toString() },
+    { label: "Avg IRR", value: `${formatNumber(totals.avg_irr)}%` },
+    { label: "Avg TVPI", value: `${formatNumber(totals.avg_tvpi)}x` },
   ];
 
   return (
@@ -49,10 +29,13 @@ export default function StatsCards({ totals }: StatsCardsProps) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className={`${card.color} border rounded-xl p-4`}
+          className="bg-white border border-gray-200/80 rounded-xl p-4 shadow-sm"
         >
-          <p className="text-sm text-gray-500 font-medium">{card.label}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+            {card.label}
+          </p>
+          <p className="text-2xl font-bold text-gray-900 mt-1.5">{card.value}</p>
+          <div className="mt-2 h-0.5 w-8 rounded-full" style={{ background: "var(--accent)" }} />
         </div>
       ))}
     </div>

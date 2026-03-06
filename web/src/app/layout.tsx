@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | AltSight",
   },
   description:
-    "Track pension fund private equity, venture capital, and alternative investment performance. IRR, TVPI, and DPI data from public pension disclosures.",
+    "Data on private equity, venture capital, and alternative investment performance. IRR, TVPI, and DPI data from public pension disclosures.",
   keywords: [
     "alternative assets",
     "pension fund returns",
