@@ -22,7 +22,13 @@ function formatCurrency(n: number | null): string {
 }
 
 export default function AssetClassBreakdown({ data, onSelect }: Props) {
-  const maxCount = Math.max(...data.map((d) => d.count));
+  const sortedData = [...data].sort(
+    (a, b) => (b.total_commitment ?? 0) - (a.total_commitment ?? 0)
+  );
+  const totalCommitment = sortedData.reduce(
+    (sum, row) => sum + (row.total_commitment ?? 0),
+    0
+  );
 
   return (
     <div className="bg-white border border-gray-200/80 rounded-xl p-5 shadow-sm">
@@ -30,7 +36,7 @@ export default function AssetClassBreakdown({ data, onSelect }: Props) {
         Holdings by Asset Class
       </h3>
       <div className="space-y-3">
-        {data.map((row) => (
+        {sortedData.map((row) => (
           <button
             key={row.asset_class}
             onClick={() => onSelect(row.asset_class)}
@@ -66,7 +72,10 @@ export default function AssetClassBreakdown({ data, onSelect }: Props) {
               <div
                 className="h-2 rounded-full transition-all"
                 style={{
-                  width: `${(row.count / maxCount) * 100}%`,
+                  width:
+                    totalCommitment > 0
+                      ? `${((row.total_commitment ?? 0) / totalCommitment) * 100}%`
+                      : "0%",
                   background: "var(--accent)",
                 }}
               />
