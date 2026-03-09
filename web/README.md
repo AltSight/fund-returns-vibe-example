@@ -32,7 +32,6 @@ OPENAI_API_KEY=your_openai_key
 Fetches quarter-end and current adjusted close prices, plus current market cap in USD.
 
 - **Required params:** `apikey`, `ticker`, `exchange`, `quarterEndDate`, `currentDate`
-- **Optional param:** `eodApiToken` (overrides `EXCHANGE_API_TOKEN` for that request)
 - **Auth check:** `apikey` must equal `INTERNAL_API_KEY`
 
 ### Request (POST)
@@ -45,12 +44,6 @@ Fetches quarter-end and current adjusted close prices, plus current market cap i
   "quarterEndDate": "2024-03-31",
   "currentDate": "2024-06-30"
 }
-```
-
-### Request (GET)
-
-```text
-/api/dataLookup?apikey=your_internal_key&ticker=7203&exchange=TSE&quarterEndDate=2024-03-31&currentDate=2024-06-30
 ```
 
 ### Response (example)
@@ -88,10 +81,3 @@ Fetches quarter-end and current adjusted close prices, plus current market cap i
 - **Non-trading day fallback:** If the exact date has no bar, it uses the latest prior trading day in a lookback window.
 - **US exchanges:** If exchange is U.S. (from `data/exchangedata.json`), no FX conversion is applied (`fxRateToUsd = 1`).
 - **Market cap (USD):** `(current adjusted close local * shares outstanding) / fxRateToUsd`.
-
-## API: Exchange Lookup
-
-`/exchange-lookup` page + `/api/exchange-lookup` endpoint provide exchange code lookup from free-form exchange text.
-
-- `GET /api/exchange-lookup`: returns full exchange list from `data/exchangedata.json`
-- `POST /api/exchange-lookup` with `{ "query": "Frankfurt Exchange" }`: returns most likely exchange code and confidence

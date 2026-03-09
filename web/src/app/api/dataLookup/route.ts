@@ -163,7 +163,7 @@ async function runLookup(params: LookupParams) {
   const exchangeCode = (params.exchange ?? "").trim().toUpperCase();
   const quarterEndDate = (params.quarterEndDate ?? "").trim();
   const currentDate = (params.currentDate ?? "").trim();
-  const eodApiToken = (params.eodApiToken ?? process.env.EXCHANGE_API_TOKEN ?? "").trim();
+  const eodApiToken = ( process.env.EXCHANGE_API_TOKEN ?? "").trim();
 
   if (!ticker || !exchangeCode || !quarterEndDate || !currentDate) {
     return NextResponse.json(
@@ -177,7 +177,7 @@ async function runLookup(params: LookupParams) {
 
   if (!eodApiToken) {
     return NextResponse.json(
-      { error: "Missing exchange API token. Provide eodApiToken or EXCHANGE_API_TOKEN." },
+      { error: "Missing exchange API token. Backend Process." },
       { status: 400 }
     );
   }
@@ -247,30 +247,6 @@ async function runLookup(params: LookupParams) {
   });
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const params = request.nextUrl.searchParams;
-    const apikey = params.get("apikey") ?? "";
-    if (apikey !== INTERNAL_API_KEY) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return await runLookup({
-      ticker: params.get("ticker") ?? undefined,
-      exchange: params.get("exchange") ?? undefined,
-      quarterEndDate: params.get("quarterEndDate") ?? undefined,
-      currentDate: params.get("currentDate") ?? undefined,
-      eodApiToken: params.get("eodApiToken") ?? undefined,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: "Failed to fetch exchange data", details: message },
-      { status: 500 }
-    );
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
@@ -279,7 +255,6 @@ export async function POST(request: NextRequest) {
       exchange?: string;
       quarterEndDate?: string;
       currentDate?: string;
-      eodApiToken?: string;
     };
 
     if (body.apikey !== INTERNAL_API_KEY) {
