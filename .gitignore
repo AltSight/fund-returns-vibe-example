@@ -21,7 +21,8 @@
 /build
 
 # data and SQLite database
-/data
+/data/*
+!/data/exchangedata.json
 
 # misc
 .DS_Store
@@ -44,6 +45,10 @@ yarn-error.log*
 next-env.d.ts
 node_modules
 .next
+
+
+funds.db
+*.db
 
 __pycache__
 .env
