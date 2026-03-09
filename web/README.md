@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Fund Returns Web App
+
+Next.js app for the AltSight fund returns dashboard and supporting APIs.
 
 ## Getting Started
 
-First, run the development server:
+Run the development server from `web`:
 
 ```bash
-npm run dev
-# or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Configure these in `web/.env`:
 
-## Learn More
+```env
+# Internal key required by /api/dataLookup requests
+INTERNAL_API_KEY=your_internal_key
 
-To learn more about Next.js, take a look at the following resources:
+# API token used for price/fundamental/FX calls
+EXCHANGE_API_TOKEN=your_eodhd_token
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Optional: API key for exchange code matching endpoint
+OPENAI_API_KEY=your_openai_key
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API: `POST` / `GET` `/api/dataLookup`
 
-## Deploy on Vercel
+Fetches quarter-end and current adjusted close prices, plus current market cap in USD.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Required params:** `apikey`, `ticker`, `exchange`, `quarterEndDate`, `currentDate`
+- **Optional param:** `eodApiToken` (overrides `EXCHANGE_API_TOKEN` for that request)
+- **Auth check:** `apikey` must equal `INTERNAL_API_KEY`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Request (POST)
+
+```json
+{
+  "apikey": "your_internal_key",
+  "ticker": "7203",
+  "exchange": "TSE",
+  "quarterEndDate": "2024-03-31",
+  "currentDate": "2024-06-30"
+}
+```
+
+### Request (GET)
+
+```text
+/api/dataLookup?apikey=your_internal_key&ticker=7203&exchange=TSE&quarterEndDate=2024-03-31&currentDate=2024-06-30
+```
+
+### Response (example)
+
+```json
+{
+  "ticker": "7203",
+  "exchange": "TSE",
+  "eodSymbol": "7203.TSE",
+  "exchangeName": "Tokyo Stock Exchange",
+  "quarterEndDateRequested": "2024-03-31",
+  "quarterEndDateUsed": "2024-03-29",
+  "currentDateRequested": "2024-06-30",
+  "currentDateUsed": "2024-06-28",
+  "quoteCurrency": "JPY",
+  "fxApplied": true,
+  "quarterEnd": {
+    "adjustedCloseLocal": 3576,
+    "adjustedCloseUsd": 23.62,
+    "fxRateToUsd": 151.35
+  },
+  "current": {
+    "adjustedCloseLocal": 3850,
+    "adjustedCloseUsd": 24.88,
+    "fxRateToUsd": 154.73,
+    "sharesOutstanding": 1628600000,
+    "marketCapUsd": 40520000000
+  }
+}
+```
+
+### Behavior Notes
+
+- **Adjusted close:** Uses `adjusted_close` from EODHD, falling back to `close` if missing.
+- **Non-trading day fallback:** If the exact date has no bar, it uses the latest prior trading day in a lookback window.
+- **US exchanges:** If exchange is U.S. (from `data/exchangedata.json`), no FX conversion is applied (`fxRateToUsd = 1`).
+- **Market cap (USD):** `(current adjusted close local * shares outstanding) / fxRateToUsd`.
+
+## API: Exchange Lookup
+
+`/exchange-lookup` page + `/api/exchange-lookup` endpoint provide exchange code lookup from free-form exchange text.
+
+- `GET /api/exchange-lookup`: returns full exchange list from `data/exchangedata.json`
+- `POST /api/exchange-lookup` with `{ "query": "Frankfurt Exchange" }`: returns most likely exchange code and confidence
