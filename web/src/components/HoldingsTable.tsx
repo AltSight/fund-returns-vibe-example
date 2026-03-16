@@ -117,10 +117,14 @@ export default function HoldingsTable({
                     ? "WSIB"
                     : h.pension_fund}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <span
-                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                    style={{ background: "var(--accent-light)", color: "var(--accent-dark)" }}
+                    className="inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold tracking-wide"
+                    style={{
+                      background: "#edf6f5",
+                      borderColor: "#d6e9e7",
+                      color: "var(--accent-dark)",
+                    }}
                   >
                     {h.asset_class || "—"}
                   </span>
