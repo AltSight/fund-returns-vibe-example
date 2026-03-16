@@ -27,7 +27,7 @@ EXCHANGE_API_TOKEN=your_eodhd_token
 OPENAI_API_KEY=your_openai_key
 ```
 
-## API: `POST` / `GET` `/api/dataLookup`
+## API: `POST` `/api/dataLookup`
 
 Fetches quarter-end and current adjusted close prices, plus current market cap in USD.
 

@@ -12,6 +12,11 @@ import McpInfoButton from "@/components/McpInfoButton";
 import Benchmarking from "@/components/Benchmarking";
 import { FundHolding } from "@/lib/db";
 
+interface Quarter {
+  pension_fund: string;
+  as_of_date: string;
+}
+
 interface Stats {
   assetClasses: {
     asset_class: string;
@@ -35,6 +40,7 @@ interface Stats {
     avg_irr: number | null;
     avg_tvpi: number | null;
   };
+  quarters: Quarter[];
 }
 
 interface HoldingsResponse {
@@ -52,22 +58,29 @@ export default function Home() {
 
   const [assetClass, setAssetClass] = useState("All");
   const [pensionFund, setPensionFund] = useState("All");
+  const [quarter, setQuarter] = useState("latest");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("irr");
   const [sortDir, setSortDir] = useState("desc");
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    fetch("/api/stats")
+  const fetchStats = useCallback(() => {
+    const params = new URLSearchParams({ as_of_date: quarter });
+    fetch(`/api/stats?${params}`)
       .then((r) => r.json())
       .then(setStats);
-  }, []);
+  }, [quarter]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const fetchHoldings = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams({
       asset_class: assetClass,
       pension_fund: pensionFund,
+      as_of_date: quarter,
       search: searchQuery,
       sort_by: sortBy,
       sort_dir: sortDir,
@@ -80,7 +93,7 @@ export default function Home() {
         setHoldings(data);
         setLoading(false);
       });
-  }, [assetClass, pensionFund, searchQuery, sortBy, sortDir, page]);
+  }, [assetClass, pensionFund, quarter, searchQuery, sortBy, sortDir, page]);
 
   useEffect(() => {
     fetchHoldings();
@@ -88,7 +101,13 @@ export default function Home() {
 
   useEffect(() => {
     setPage(1);
-  }, [assetClass, pensionFund, searchQuery]);
+  }, [assetClass, pensionFund, quarter, searchQuery]);
+
+  // Reset quarter to "latest" when pension fund changes so we don't get
+  // stuck on a quarter that doesn't exist for the newly selected fund.
+  useEffect(() => {
+    setQuarter("latest");
+  }, [pensionFund]);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -102,6 +121,45 @@ export default function Home() {
   const handleAssetClassSelect = (ac: string) => {
     setAssetClass(ac === assetClass ? "All" : ac);
   };
+
+  // Derive the list of quarter options from the stats response, filtered
+  // to the selected pension fund when one is chosen.
+  const quarterOptions: string[] = [];
+  if (stats?.quarters) {
+    const relevant =
+      pensionFund !== "All"
+        ? stats.quarters.filter((q) => q.pension_fund === pensionFund)
+        : stats.quarters;
+
+    const unique = [...new Set(relevant.map((q) => q.as_of_date))];
+
+    // Sort chronologically (newest first) by parsing month names.
+    unique.sort((a, b) => {
+      const da = parseQuarterDate(a);
+      const db = parseQuarterDate(b);
+      return db.getTime() - da.getTime();
+    });
+
+    quarterOptions.push(...unique);
+  }
+
+  // Derive one entry per pension fund showing its latest quarter date.
+  const latestPerFund: [string, string][] = [];
+  if (stats?.quarters) {
+    const map = new Map<string, Date>();
+    const raw = new Map<string, string>();
+    for (const q of stats.quarters) {
+      const d = parseQuarterDate(q.as_of_date);
+      if (!map.has(q.pension_fund) || d > map.get(q.pension_fund)!) {
+        map.set(q.pension_fund, d);
+        raw.set(q.pension_fund, q.as_of_date);
+      }
+    }
+    for (const [fund, date] of raw) {
+      latestPerFund.push([fund, date]);
+    }
+    latestPerFund.sort((a, b) => a[0].localeCompare(b[0]));
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "#F7F8FA" }}>
@@ -131,18 +189,18 @@ export default function Home() {
             <div className="flex items-center gap-3">
               {stats && (
                 <div className="hidden lg:flex items-center gap-3 text-[11px] text-slate-400">
-                  {stats.documents.map((doc) => (
+                  {latestPerFund.map(([fund, date]) => (
                     <span
-                      key={doc.id}
+                      key={fund}
                       className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50"
                     >
                       <span
                         className="w-1.5 h-1.5 rounded-full inline-block"
                         style={{ background: "var(--accent)" }}
                       />
-                      {doc.pension_fund}
+                      {fund}
                       <span className="text-slate-300">|</span>
-                      {doc.report_date}
+                      {date}
                     </span>
                   ))}
                 </div>
@@ -175,11 +233,14 @@ export default function Home() {
               <Filters
                 assetClasses={stats.assetClasses.map((a) => a.asset_class)}
                 pensionFunds={stats.pensionFunds.map((p) => p.pension_fund)}
+                quarters={quarterOptions}
                 selectedAssetClass={assetClass}
                 selectedPensionFund={pensionFund}
+                selectedQuarter={quarter}
                 searchQuery={searchQuery}
                 onAssetClassChange={setAssetClass}
                 onPensionFundChange={setPensionFund}
+                onQuarterChange={setQuarter}
                 onSearchChange={setSearchQuery}
               />
             )}
@@ -210,4 +271,11 @@ export default function Home() {
       </main>
     </div>
   );
+}
+
+function parseQuarterDate(s: string): Date {
+  const cleaned = s.replace(",", "");
+  const d = new Date(cleaned);
+  if (!isNaN(d.getTime())) return d;
+  return new Date(0);
 }

@@ -53,3 +53,4 @@ funds.db
 __pycache__
 .env
 pipeline/__pycache__
+Funds Data/
