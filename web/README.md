@@ -1,6 +1,6 @@
 ## Fund Returns Web App
 
-Next.js app for the AltSight fund returns dashboard and supporting APIs.
+App for the AltSight fund returns dashboard and supporting APIs. Enables users to see reported pension data and benchmark against it.
 
 ## Getting Started
 
@@ -25,7 +25,63 @@ EXCHANGE_API_TOKEN=your_eodhd_token
 
 # Optional: API key for exchange code matching endpoint
 OPENAI_API_KEY=your_openai_key
+
+# Optional: API key for Perplexity enrichment of fund metadata
+PERPLEXITY_API_KEY=your_perplexity_key
 ```
+
+## API: `GET` `/api/stats`
+
+Returns aggregated dashboard statistics, available quarters, and document metadata.
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `as_of_date` | string | `"latest"` | `"latest"` for the most recent quarter per fund, or an exact date string (e.g. `"June 30, 2025"`) |
+
+### Response (shape)
+
+```json
+{
+  "assetClasses": [{ "asset_class": "Private Equity", "count": 312, "avg_irr": 14.2, "avg_tvpi": 1.45, "total_commitment": 8200000000 }],
+  "pensionFunds": [{ "pension_fund": "CalSTRS", "count": 210, "as_of_date": "June 30, 2025" }],
+  "documents": [{ "id": 1, "filename": "washington 26.pdf", "pension_fund": "WSIB", "report_date": "December 31, 2024" }],
+  "totals": { "total_holdings": 1024, "total_pensions": 5, "total_asset_classes": 6, "avg_irr": 12.5, "avg_tvpi": 1.38 },
+  "quarters": [{ "pension_fund": "WSIB", "as_of_date": "June 30, 2025" }, { "pension_fund": "WSIB", "as_of_date": "December 31, 2024" }]
+}
+```
+
+---
+
+## API: `GET` `/api/holdings`
+
+Returns paginated, sortable, filterable fund holdings.
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `as_of_date` | string | `"latest"` | `"latest"` for the most recent quarter per fund, or an exact date string |
+| `pension_fund` | string | `"All"` | Filter to a single pension fund |
+| `asset_class` | string | `"All"` | Filter to a single asset class |
+| `search` | string | | Case-insensitive substring match on `fund_name` |
+| `sort_by` | string | `"irr"` | One of: `fund_name`, `irr`, `tvpi`, `dpi`, `commitment`, `contributed`, `distributed`, `market_value`, `vintage_year`, `pension_fund`, `asset_class` |
+| `sort_dir` | string | `"desc"` | `"asc"` or `"desc"` |
+| `page` | int | `1` | Page number (1-indexed) |
+| `limit` | int | `50` | Results per page |
+| `min_irr` | float | | Minimum IRR filter |
+| `max_irr` | float | | Maximum IRR filter |
+
+### Response (shape)
+
+```json
+{
+  "data": [{ "id": 1, "fund_name": "Blackstone Capital Partners V", "irr": 18.5, "tvpi": 1.92, "...": "..." }],
+  "total": 312,
+  "page": 1,
+  "limit": 50,
+  "totalPages": 7
+}
+```
+
+---
 
 ## API: `POST` `/api/dataLookup`
 
