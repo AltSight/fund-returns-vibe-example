@@ -51,6 +51,19 @@ def clean_multiple(val: str) -> str:
     return val
 
 
+AS_OF_RE = re.compile(
+    r"As of\s+([A-Z][a-z]+ \d{1,2}, \d{4})",
+)
+
+
+def extract_as_of_date(text: str) -> str:
+    """Read the reporting date from the CalPERS performance page."""
+    match = AS_OF_RE.search(text)
+    if not match:
+        raise ValueError("Could not find an as-of date on the CalPERS performance page")
+    return match.group(1)
+
+
 def scrape_calpers():
     print(f"Fetching {URL} ...")
     headers = {
@@ -61,6 +74,8 @@ def scrape_calpers():
     print(f"Response: {resp.status_code}, length: {len(resp.text):,} chars")
 
     soup = BeautifulSoup(resp.text, "lxml")
+    as_of_date = extract_as_of_date(soup.get_text(" ", strip=True))
+    print(f"As-of date: {as_of_date}")
 
     table = soup.find("table")
     if not table:
@@ -121,6 +136,7 @@ def scrape_calpers():
             "cash_out_and_remaining_value": cash_out_remaining,
             "net_irr": net_irr,
             "investment_multiple": investment_multiple,
+            "as_of_date": as_of_date,
         })
 
     print(f"\nExtracted {len(records)} fund records")
@@ -143,6 +159,7 @@ def scrape_calpers_for_pipeline() -> dict:
     page_count, holdings (list of dicts matching the Supabase schema).
     """
     records = scrape_calpers()
+    report_date = records[0]["as_of_date"] if records else ""
     holdings = []
     for r in records:
         committed = _to_float(r["capital_committed"])
@@ -188,7 +205,7 @@ def scrape_calpers_for_pipeline() -> dict:
 
     return {
         "pension_fund": "CalPERS",
-        "report_date": "June 30, 2025",
+        "report_date": report_date,
         "document_type": "Private Equity Program Fund Performance",
         "page_count": 0,
         "holdings": holdings,
