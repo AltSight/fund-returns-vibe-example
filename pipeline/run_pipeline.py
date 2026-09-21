@@ -137,13 +137,13 @@ def process_file(filepath: str, sb, use_llm: bool):
 
 def process_calpers_scrape(sb, use_llm: bool):
     """Scrape CalPERS PE fund performance from the web and load into Supabase."""
-    source_label = "calpers_pe_web_scrape"
-    if already_processed(sb, source_label):
-        print(f"  Skipping CalPERS web scrape (already processed)", flush=True)
-        return
-
     print("  Scraping CalPERS PE Fund Performance...", flush=True)
     result = scrape_calpers_for_pipeline()
+    report_slug = result["report_date"].replace(" ", "_").replace(",", "")
+    source_label = f"calpers_pe_web_scrape_{report_slug}"
+    if already_processed(sb, source_label):
+        print(f"  Skipping CalPERS web scrape for {result['report_date']} (already processed)", flush=True)
+        return
 
     if not result["holdings"]:
         print("  No holdings extracted from CalPERS scrape", flush=True)

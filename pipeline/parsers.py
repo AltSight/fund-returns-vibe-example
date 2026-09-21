@@ -249,19 +249,21 @@ def _parse_wsib(text: str, page_count: int) -> dict:
     current_strategy = None
     lines = text.split("\n")
 
+    # Strategy labels sometimes share a line with repeated column headers
+    # (e.g. "Corporate Finance/Buyout - Large Contributions Unfunded ...").
     strategy_pattern = re.compile(
         r"^(Corporate Finance/Buyout\s*-\s*\w+|Distressed Debt|Growth Equity|"
         r"Mezzanine|Real Estate\s*-\s*\w+|Co-Investment|Special Situation|"
-        r"Venture Capital)\s*$",
+        r"Venture Capital)\b",
         re.IGNORECASE,
     )
     asset_class_map = {
         "corporate finance/buyout": "Private Equity",
-        "distressed debt": "Private Equity",
+        "distressed debt": "Private Credit",
         "growth equity": "Growth Equity",
-        "mezzanine": "Private Equity",
+        "mezzanine": "Private Credit",
         "real estate": "Real Estate",
-        "co-investment": "Private Equity",
+        "co-investment": "Co-Investment",
         "special situation": "Private Equity",
         "venture capital": "Venture Capital",
     }
@@ -276,7 +278,10 @@ def _parse_wsib(text: str, page_count: int) -> dict:
             current_strategy = strat_match.group(1).strip()
             continue
 
-        if any(skip in line for skip in [
+        # Header and footnote lines share words like "Capital" with real fund
+        # names, so only drop a line when it is not a holding row.
+        has_holding_date = bool(re.search(r"\d{1,2}/\d{1,2}/\d{4}", line))
+        if not has_holding_date and any(skip in line for skip in [
             "Washington State", "Performance Summary", "Investment Name",
             "Hamilton Lane", "Subtotal", "Total Portfolio", "Capital",
             "Paid-In", "Unfunded", "Current", "Distributed", "Total Value",
